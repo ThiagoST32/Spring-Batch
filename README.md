@@ -43,20 +43,17 @@ version: '3.8'
 services:
   mysqlData:
     image: mysql:latest
-    environment:
-      MYSQL_USER: batch_user
-      MYSQL_PASSWORD: user_batch_password
-      MYSQL_ROOT_PASSWORD: root_batch_password
-      MYSQL_DATABASE: batch_db
     ports:
       - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql/data
+    environment:
+      - MYSQL_USER=batch_user
+      - MYSQL_PASSWORD=user_batch_password
+      - MYSQL_ROOT_PASSWORD=root_batch_password
+      - MYSQL_DATABASE=data01
+      - MYSQL_DATABASE=data02
+    restart: always
     networks:
       - batch-network
-
-volumes:
-  mysql_data:
 
 networks:
   batch-network:
@@ -75,7 +72,7 @@ This command starts the MySQL container in the background. Verify that the conta
 docker ps
 ```
 
-You should see a container named `<repository-directory>_mysql_1` running on port `3306`.
+You should see a container named `<repository-directory>_mysqlData_1` running on port `3306`.
 
 ### Step 3: Configure the Spring Batch Application
 
@@ -98,12 +95,19 @@ spring:
         jdbc:
             initialize-schema: always
 
+data01:
     datasource:
         driverClassName: com.mysql.cj.jdbc.Driver
         url: jdbc:mysql://localhost:3306/data01
         username: batch_user
         password: batch_password
-```
+
+data02:
+    datasource:
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3307/data02
+        username: batch_user
+        password: batch_password
 
 ### Step 4: Build the Project
 
@@ -126,15 +130,13 @@ mvn spring-boot:run
 - Check the MySQL database to verify that Spring Batch metadata tables (e.g., `BATCH_JOB_INSTANCE`, `BATCH_JOB_EXECUTION`) have been created and populated:
 
 ```bash
-docker exec -it <container-name // container-id> mysql -U batch_user -d batch_db
+docker exec -it <container-name // container-id> mysql -U batch_db -p
 ```
 
 Run the following SQL query:
 
 ```sql
-show databases;
-use data01;
-show tables;
+SHOW TABLES;
 ```
 
 You should see tables like `BATCH_JOB_INSTANCE`, `BATCH_JOB_EXECUTION`, etc.
