@@ -121,9 +121,9 @@ data02:
 
 Build the project using Maven to download dependencies and compile the code:
 
-bash
+```bash
 mvn clean install
-
+```
 
 ### Step 5: Run the Application
 
