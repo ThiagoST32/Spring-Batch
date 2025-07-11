@@ -9,7 +9,7 @@ This guide explains how to set up and run the project locally using **Docker Com
 ## Prerequisites
 
 To run this project locally, ensure you have the following installed:
-- **Java 17** or later (JDK)
+- **Java 21** or later (JDK)
 - **Maven** (for building the project)
 - **Docker** and **Docker Compose** (for running the MySQL database)
 - A code editor like IntelliJ IDEA, Eclipse, or VS Code (optional, for development)
@@ -49,11 +49,11 @@ services:
       - MYSQL_USER=batch_user
       - MYSQL_PASSWORD=user_batch_password
       - MYSQL_ROOT_PASSWORD=root_batch_password
-      - MYSQL_DATABASE=data01
-      - MYSQL_DATABASE=data02
     restart: always
     networks:
       - batch-network
+    volumes:
+      - ./sql.sql:/docker-entrypoint-initdb.d/sql.sql
 
 networks:
   batch-network:
@@ -79,12 +79,18 @@ You should see a container named `<repository-directory>_mysqlData_1` running on
 The Spring Batch application is configured to connect to the MySQL database. Ensure the `application.properties` or `application.yml` file in `src/main/resources` is set up as follows:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/data01
-spring.datasource.username=batch_user
-spring.datasource.password=batch_password
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.batch.jdbc.initialize-schema=always
 spring.batch.job.enabled=true
+
+data01.datasource.jdbcUrl=jdbc:mysql://localhost:3306/data01
+data01.datasource.username=batch_user
+data01.datasource.password=batch_password
+data01.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+data02.datasource.jdbcUrl=jdbc:mysql://localhost:3306/data01
+data02.datasource.username=batch_user
+data02.datasource.password=batch_password
+data02.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 ```
 ```properties
 spring:
@@ -98,24 +104,26 @@ spring:
 data01:
     datasource:
         driverClassName: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://localhost:3306/data01
+        jdbcUrl: jdbc:mysql://localhost:3306/data01
         username: batch_user
         password: batch_password
 
 data02:
     datasource:
         driverClassName: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://localhost:3307/data02
+        jdbcUrl: jdbc:mysql://localhost:3306/data02
         username: batch_user
         password: batch_password
+
+```
 
 ### Step 4: Build the Project
 
 Build the project using Maven to download dependencies and compile the code:
 
-```bash
+bash
 mvn clean install
-```
+
 
 ### Step 5: Run the Application
 
@@ -149,7 +157,7 @@ When you're done, stop and remove the Docker Compose services:
 docker-compose down
 ```
 
-This command stops the MySQL container and removes the associated network, but retains the database volume for future use.
+This command stops the MySQL container and removes the associated network.
 
 ## Troubleshooting
 
@@ -195,7 +203,7 @@ public class BatchConfig {
     public Step myStep() {
         return new StepBuilder("myStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
-                    System.out.println("Executando o step!");
+                    System.out.println("Executing step!");
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
                 .build();
