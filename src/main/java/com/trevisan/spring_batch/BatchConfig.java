@@ -2,7 +2,6 @@ package com.trevisan.spring_batch;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
@@ -63,11 +62,10 @@ public class BatchConfig {
     }
 
     @Bean
-    public ItemWriter<Pessoa> writer(@Qualifier("data02") DataSource dataSource){
+    public ItemWriter<Pessoa> writer(@Qualifier("data02") DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<Pessoa>()
             .dataSource(dataSource)
-            .sql("INSERT INTO pessoa (name, document, email, phone, age)" +
-                    "VALUES(:name, :document, :email, :phone, :age)")
+            .sql("INSERT INTO pessoa (name, document, email, phone, age) VALUES(:name, :document, :email, :phone, :age)")
             .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
             .build();
     }
